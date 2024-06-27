@@ -1,13 +1,21 @@
 use std::{
     fs, io::{prelude::*, BufReader}, net::{TcpListener, TcpStream}, thread, time::Duration
 };
+use multithread_web_server::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
 
+    let pool = ThreadPool::new(4);
+
     for stream in listener.incoming() {
         match stream {
-            Ok(stream) => handle_stream(stream),
+            Ok(stream) => {
+                pool.execute(|| {
+                    handle_stream(stream)
+                });
+                ()
+            },
             Err(err) => eprintln!("Error while connection to stream: {}", err)
         }
     }
